@@ -13,5 +13,10 @@ namespace CsvDocConverter
     /// </summary>
     public partial class App : Application
     {
+        private void Application_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        {
+            MessageBox.Show("Eine unbehandelter Fehler ist aufgetreten: " + e.Exception.Message, "Unbehandelter Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
+            e.Handled = true;
+        }
     }
 }

@@ -16,11 +16,6 @@ namespace CsvDocConverter
 {
     public class MainViewModel : INotifyPropertyChanged
     {
-
-#warning TODO
-#warning - assembly info helper
-
-
         #region INotifyPropertyChanged implementation
         /// <summary>
         /// Raised when a property on this object has a new value.
@@ -69,7 +64,7 @@ namespace CsvDocConverter
                     {
                         System.Windows.Forms.OpenFileDialog openFileDialog = new System.Windows.Forms.OpenFileDialog();
                         openFileDialog.FileName = TemplatePath;
-                        openFileDialog.Filter = "Word File (*.docx)|*.docx|Word File (*.doc)|*.doc";
+                        openFileDialog.Filter = "Word File (*.docx)|*.docx";        // Only allow new *.docx format
                         if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                         {
                             TemplatePath = openFileDialog.FileName;
@@ -153,7 +148,7 @@ namespace CsvDocConverter
         /// </summary>
         public List<string> CsvFilePaths
         {
-            get { return _csvFilePaths; }
+            get { return (_csvFilePaths == null ? new List<string>() : _csvFilePaths); }
             set
             {
                 _csvFilePaths = value;
@@ -267,7 +262,7 @@ namespace CsvDocConverter
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 List<string> fileNames = ((string[])e.Data.GetData(DataFormats.FileDrop)).ToList();
-                string templateFileName = fileNames.Where(f => System.IO.Path.GetExtension(f) == ".docx" || System.IO.Path.GetExtension(f) == ".doc").FirstOrDefault();
+                string templateFileName = fileNames.Where(f => System.IO.Path.GetExtension(f) == ".docx").FirstOrDefault();
                 string mappingFileName = fileNames.Where(f => (System.IO.Path.GetExtension(f) == ".csv" || System.IO.Path.GetExtension(f) == ".txt") && System.IO.Path.GetFileName(f).ToLower().StartsWith("mapping")).FirstOrDefault();
                 List<string> csvFileNames = fileNames.Where(f => (System.IO.Path.GetExtension(f) == ".csv" || System.IO.Path.GetExtension(f) == ".txt") && !System.IO.Path.GetFileName(f).ToLower().StartsWith("mapping")).ToList();
 
@@ -288,6 +283,16 @@ namespace CsvDocConverter
             if (!System.IO.File.Exists(TemplatePath))
             {
                 await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "Das Template wurde nicht gefunden: " + Environment.NewLine + TemplatePath);
+                return;
+            }
+            if (System.IO.Path.GetExtension(TemplatePath).ToLower() != ".docx")
+            {
+                await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "Das Template hat das falsche Format (nur *.docx erlaubt): " + Environment.NewLine + TemplatePath);
+                return;
+            }
+            if (!System.IO.File.Exists(MappingCsvFilePath))
+            {
+                await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "Die Mapping Datei wurde nicht gefunden: " + Environment.NewLine + TemplatePath);
                 return;
             }
             if (MappingFile.Mappings == null)
