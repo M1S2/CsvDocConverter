@@ -1,0 +1,9 @@
+%Allgemein 
+PlatzhalterDoc, SpalteCsv
+%Veranstaltungsinfos%, %Allgemein%
+%Name%, Name
+%Email%, E-Mail
+%Telefon%, Telefonnummer
+%Buchungsdatum%, Buchungsdatum
+%Kommentar%, Buchungskommentar
+%Status%, Status
