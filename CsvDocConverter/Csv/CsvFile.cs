@@ -21,7 +21,7 @@ namespace CsvDocConverter.Csv
         }
 
         /// <summary>
-        /// sign that is used in the .csv file to separate each element in a line
+        /// Character that is used in the .csv file to separate each element in a line
         /// </summary>
         public char Delimiter { get; set; }
 
@@ -31,7 +31,7 @@ namespace CsvDocConverter.Csv
         public bool ListHeaderLines { get; set; }
 
         /// <summary>
-        /// A list that contains the rows above the csv table (all rows with only one element)
+        /// A list that contains the rows above the csv table (all rows with a length not equal to the last row in the csv file)
         /// </summary>
         public List<string> CsvFileDescriptionRows { get; set; }
 
@@ -62,7 +62,19 @@ namespace CsvDocConverter.Csv
         //###############################################################################################################################################################################################
 
         /// <summary>
-        /// Read the content of the given .csv file to a list of CSVFileLines that contains prepared information
+        /// Read the content of the given .csv file to a list of CSVFileLines that contains prepared information. The .csv file is structured as follows ([...] means optionally):
+        /// 
+        /// [DescriptionRow1]
+        /// [DescriptionRow2]
+        /// ...
+        /// HeaderLine
+        /// DataLine
+        /// DataLine
+        /// ...
+        /// 
+        /// DescriptionRows can be omitted if not needed. There can be more than 2 DescriptionRows.
+        /// Exact one header line is neccessary. The header line is the last line (from the bottom, no need to be the first line) that has the same number of elements as the last line in the .csv file.
+        /// There can be any number of DataLines.
         /// </summary>
         /// <returns>true on success; otherwise false</returns>
         private bool ReadCSVLines()
@@ -70,6 +82,7 @@ namespace CsvDocConverter.Csv
             CsvFileLines = new List<CsvFileLine>();
             CsvFileDescriptionRows = new List<string>();
 
+            // ########## Check FilePath ##########
             if (!File.Exists(FilePath))
             {
                 return false;
@@ -78,64 +91,79 @@ namespace CsvDocConverter.Csv
             {
                 return false;
             }
-            string[] csv_lines = System.IO.File.ReadAllLines(FilePath);                 //Read all lines of the .csv file
+            string[] csv_lines = System.IO.File.ReadAllLines(FilePath);                             //Read all lines of the .csv file
 
-            CsvFileLine headerLine = null;                          //This array holds the found header line
-            bool currentLineIsHeaderLine = false;
+            // ########## Find Header Line ##########
+            int headerLineIndex = -1;
+            string regexPatternLineElements = Delimiter + "(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)";       //Using quotes to allow the delimiter
 
-            foreach (string line in csv_lines)                      //loop through all lines
+            // The header line is the last line (from the bottom, no need to be the first line) that has the same number of elements as the last line in the .csv file
+            int numLastLineElements = Regex.Split(csv_lines.Last(), regexPatternLineElements).Length;
+            for (int lineNo = csv_lines.Length - 1; lineNo >= 0; lineNo--)
             {
+                int numLineElements = Regex.Split(csv_lines[lineNo], regexPatternLineElements).Length;
+                if(numLineElements != numLastLineElements)
+                {
+                    headerLineIndex = lineNo;
+                    break;
+                }
+            }
+            headerLineIndex++;                                                                      //Increment because the headerLineIndex points to the row before the header line
+
+            CsvFileLine headerLine = null;                                                          //This holds the found header line
+
+            for(int lineNo = 0; lineNo < csv_lines.Length; lineNo++)                                //loop through all lines
+            {
+                string[] line_split = Regex.Split(csv_lines[lineNo], regexPatternLineElements);     //split line (using quotes to allow the delimiter)
+                if (line_split.Length == 0 || line_split.Count(s => s == "") == line_split.Length)  //if the line is empty (0 elements) or each line element is "", continue with the next line
+                {
+                    continue;
+                }
+
                 CsvFileLine temp_line = new CsvFileLine();
-                
-                string[] line_split = Regex.Split(line, Delimiter + "(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");    //split line (using quotes to allow the delimiter)
 
-                if (line_split.Length == 0 || line_split.Count(s => s == "") == line_split.Length)          //if the line is empty (0 elements) or each line element is "", continue with the next line
+                // ########## Line is Description Row ##########
+                if (lineNo < headerLineIndex)
                 {
+                    CsvFileDescriptionRows.Add(csv_lines[lineNo]);
                     continue;
                 }
-
-                if(line_split.Length == 1 && headerLine == null)                    //save rows with only one element as description rows in the csv file
+                // ########## Line is Header Row ##########
+                else if (lineNo == headerLineIndex)
                 {
-                    CsvFileDescriptionRows.Add(line);
-                    continue;
-                }
-                else if(line_split.Length > 1 && headerLine == null)
-                {
-                    currentLineIsHeaderLine = true;
-                }
+                    temp_line.IsHeaderLine = true;
 
-                temp_line.IsHeaderLine = currentLineIsHeaderLine;
-
-                for (int i = 0; i < line_split.Length; i++)                         //loop through all elements in the current line
-                {
-                    string header_text = "";
-
-                    if (!currentLineIsHeaderLine && headerLine != null)
+                    for (int i = 0; i < line_split.Length; i++)                                     //loop through all elements in the current line
+                    {                        
+                        string value = line_split[i].Trim(' ').Trim('"');
+                        temp_line.LineElements.Add(new CsvFileLineElement(value, ""));              //add a new line element to the line
+                    }
+                    headerLine = temp_line;
+                    if (ListHeaderLines)
                     {
+                        CsvFileLines.Add(temp_line);                                                //Add the temporary line to the list of lines
+                    }
+                }
+                // ########## Line is Data Row ##########
+                else
+                {
+                    temp_line.IsHeaderLine = false;
+
+                    for (int i = 0; i < line_split.Length; i++)                                     //loop through all elements in the current line
+                    {
+                        string header_text = "";
                         if (i < headerLine.LineElements.Count)
                         {
-                            header_text = headerLine.LineElements[i].Value;         //get the header text for the current line element
+                            header_text = headerLine.LineElements[i].Value;                         //get the header text for the current line element
                         }
+
+                        string value = line_split[i].Trim(' ').Trim('"');
+                        temp_line.LineElements.Add(new CsvFileLineElement(value, header_text));     //add a new line element to the line
                     }
-
-                    string value = line_split[i].Trim('"');
-                    temp_line.LineElements.Add(new CsvFileLineElement(value, header_text));        //add a new line element to the line
+                    CsvFileLines.Add(temp_line);                                                    //Add the temporary line to the list of lines
                 }
-                currentLineIsHeaderLine = false;
-
-                if(temp_line.IsHeaderLine)
-                {
-                    headerLine = temp_line;
-                }
-                if (temp_line.IsHeaderLine && ListHeaderLines == false)             //Don't save the current line if it is a header line and the option ListHeaderLines == false
-                {
-                    continue;
-                }
-
-                CsvFileLines.Add(temp_line);                                        //Add the temporary line to the list of lines
             }
             return true;
         }
-
     }
 }
