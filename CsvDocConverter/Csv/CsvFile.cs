@@ -26,9 +26,9 @@ namespace CsvDocConverter.Csv
         public char Delimiter { get; set; }
 
         /// <summary>
-        /// true -> save header lines to the list of lines; false -> ignore header lines
+        /// Header line of the csv file
         /// </summary>
-        public bool ListHeaderLines { get; set; }
+        public CsvFileLine HeaderLine { get; set; }
 
         /// <summary>
         /// A list that contains the rows above the csv table (all rows with a length not equal to the last row in the csv file)
@@ -52,11 +52,9 @@ namespace CsvDocConverter.Csv
         /// </summary>
         /// <param name="filepath">fully qualified filepath of the .csv file</param>
         /// <param name="delimiter">sign that is used in the .csv file to separate each element in a line</param>
-        /// <param name="listHeaderLines">true -> save header lines to the list of lines; false -> ignore header lines</param>
-        public CsvFile(string filepath, char delimiter, bool listHeaderLines = false)
+        public CsvFile(string filepath, char delimiter)
         {
             Delimiter = delimiter;
-            ListHeaderLines = listHeaderLines;
             FilePath = filepath;
         }
         //###############################################################################################################################################################################################
@@ -81,6 +79,7 @@ namespace CsvDocConverter.Csv
         {
             CsvFileLines = new List<CsvFileLine>();
             CsvFileDescriptionRows = new List<string>();
+            HeaderLine = null;
 
             // ########## Check FilePath ##########
             if (!File.Exists(FilePath))
@@ -109,9 +108,7 @@ namespace CsvDocConverter.Csv
                 }
             }
             headerLineIndex++;                                                                      //Increment because the headerLineIndex points to the row before the header line
-
-            CsvFileLine headerLine = null;                                                          //This holds the found header line
-
+            
             for(int lineNo = 0; lineNo < csv_lines.Length; lineNo++)                                //loop through all lines
             {
                 string[] line_split = Regex.Split(csv_lines[lineNo], regexPatternLineElements);     //split line (using quotes to allow the delimiter)
@@ -136,13 +133,9 @@ namespace CsvDocConverter.Csv
                     for (int i = 0; i < line_split.Length; i++)                                     //loop through all elements in the current line
                     {                        
                         string value = line_split[i].Trim(' ').Trim('"');
-                        temp_line.LineElements.Add(new CsvFileLineElement(value, ""));              //add a new line element to the line
+                        temp_line.LineElements.Add(new CsvFileLineElement(value, value));           //add a new line element to the line
                     }
-                    headerLine = temp_line;
-                    if (ListHeaderLines)
-                    {
-                        CsvFileLines.Add(temp_line);                                                //Add the temporary line to the list of lines
-                    }
+                    HeaderLine = temp_line;
                 }
                 // ########## Line is Data Row ##########
                 else
@@ -152,9 +145,9 @@ namespace CsvDocConverter.Csv
                     for (int i = 0; i < line_split.Length; i++)                                     //loop through all elements in the current line
                     {
                         string header_text = "";
-                        if (i < headerLine.LineElements.Count)
+                        if (i < HeaderLine.LineElements.Count)
                         {
-                            header_text = headerLine.LineElements[i].Value;                         //get the header text for the current line element
+                            header_text = HeaderLine.LineElements[i].Value;                         //get the header text for the current line element
                         }
 
                         string value = line_split[i].Trim(' ').Trim('"');

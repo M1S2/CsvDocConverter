@@ -170,18 +170,7 @@ namespace CsvDocConverter
             {
                 _mappingCsvFilePath = value;
                 OnPropertyChanged();
-                MappingFile = new CsvMappingFile(MappingCsvFilePath, DelimiterCharacter);
             }
-        }
-
-        private CsvMappingFile _mappingFile;
-        /// <summary>
-        /// Mapping file object
-        /// </summary>
-        public CsvMappingFile MappingFile
-        {
-            get { return _mappingFile; }
-            set { _mappingFile = value; OnPropertyChanged(); }
         }
 
         //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -295,12 +284,7 @@ namespace CsvDocConverter
                 await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "Die Mapping Datei wurde nicht gefunden: " + Environment.NewLine + TemplatePath);
                 return;
             }
-            if (MappingFile.Mappings == null)
-            {
-                await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "Es gibt Fehler in der Mapping Datei.");
-                return;
-            }
-
+            
             int convertedFilesCnt = 0;
             // Loop over all .csv files
             foreach (string csvFilePath in CsvFilePaths)
@@ -313,6 +297,16 @@ namespace CsvDocConverter
                 }
 
                 CsvFile csv_file = new CsvFile(csvFilePath, DelimiterCharacter);
+
+                // Accept all .csv file header names as placeholders
+                CsvMappingFile MappingFile = new CsvMappingFile(MappingCsvFilePath, DelimiterCharacter);
+                if (MappingFile.Mappings == null)
+                {
+                    await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "Es gibt Fehler in der Mapping Datei.");
+                    return;
+                }
+                MappingFile.AddMappingsForDataCsvHeader(csv_file);
+
                 using (DocX templateDoc = DocX.Load(TemplatePath))
                 {
                     Xceed.Document.NET.Table templateDocTable = templateDoc.Tables.FirstOrDefault();
@@ -329,10 +323,10 @@ namespace CsvDocConverter
                     Xceed.Document.NET.Row rowPattern = templateDocTable.Rows[1];       // Get the row pattern of the second row (the first row contains the headers).
 
                     // Add the general informations to the document. This are the rows above the real CSV table.
-                    foreach (KeyValuePair<string, string> generalInfoMapping in MappingFile.Mappings.Where(m => m.Value.StartsWith(MappingFile.GeneralInfosMarkerPart)))
+                    foreach (KeyValuePair<string, string> generalInfoMapping in MappingFile.Mappings.Where(m => m.Value.StartsWith(CsvMappingFile.GENERAL_INFOS_MARKER_PART)))
                     {
                         string replacementText = "";
-                        string generalInfoIndexStr = generalInfoMapping.Value.Replace(MappingFile.GeneralInfosMarkerPart, "").Replace("%", "");
+                        string generalInfoIndexStr = generalInfoMapping.Value.Replace(CsvMappingFile.GENERAL_INFOS_MARKER_PART, "").Replace("%", "");
                         if (string.IsNullOrEmpty(generalInfoIndexStr))
                         {
                             replacementText = csv_file.AllCsvFileDescriptionRows;
@@ -345,13 +339,13 @@ namespace CsvDocConverter
                                 await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "Der Index (\"" + generalInfoIndexStr + "\") für die Beschreibungszeilen kann nicht geparst werden.");
                                 continue;
                             }
-                            if (generalInfoIndex < 0 || generalInfoIndex >= csv_file.CsvFileDescriptionRows.Count)
+                            if (generalInfoIndex <= 0 || generalInfoIndex > csv_file.CsvFileDescriptionRows.Count)
                             {
-                                await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "Der Index (" + generalInfoIndex.ToString() + ") für die Beschreibungszeilen ist außerhalb des gültigen Bereiches.");
+                                await _dialogCoordinator.ShowMessageAsync(this, "Fehler", "Der Index (" + generalInfoIndex.ToString() + ") für die Beschreibungszeilen ist außerhalb des gültigen Bereiches (1.." + csv_file.CsvFileDescriptionRows.Count.ToString() + ").");
                                 continue;
                             }
 
-                            replacementText = csv_file.CsvFileDescriptionRows[generalInfoIndex];
+                            replacementText = csv_file.CsvFileDescriptionRows[generalInfoIndex - 1];
                         }
                         templateDoc.ReplaceText(generalInfoMapping.Key, replacementText);
                     }
@@ -362,7 +356,7 @@ namespace CsvDocConverter
                         Xceed.Document.NET.Row newRow = templateDocTable.InsertRow(rowPattern, templateDocTable.RowCount - 1);      // Insert new row at the end of the table
                         foreach (KeyValuePair<string, string> mappingPair in MappingFile.Mappings)
                         {
-                            if (!mappingPair.Value.StartsWith(MappingFile.GeneralInfosMarkerPart))
+                            if (!mappingPair.Value.StartsWith(CsvMappingFile.GENERAL_INFOS_MARKER_PART))
                             {
                                 CsvFileLineElement lineElement = fileLine?.LineElements?.Where(element => element.CorrespondingHeader == mappingPair.Value)?.FirstOrDefault();
                                 newRow.ReplaceText(mappingPair.Key, lineElement == null ? "" : lineElement.Value);
