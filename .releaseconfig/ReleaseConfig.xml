@@ -19,7 +19,7 @@
     <BinaryObject xsi:type="BinaryFolder">
       <RemoveWhileBuilding>true</RemoveWhileBuilding>
       <SourcePath>\CsvDocConverter\bin\Release</SourcePath>
-      <DestinationPath>.\</DestinationPath>
+      <DestinationPath>\bin\</DestinationPath>
       <FileExcludeFilters />
     </BinaryObject>
   </BinaryObjects>
