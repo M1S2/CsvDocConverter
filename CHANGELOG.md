@@ -1,6 +1,6 @@
 # CsvDocConverter
 
-## [%version%] - %date%
+## [v1.1.0] - 11.06.2021 21:52
 
 - CSV Datei Parsing geändert (Erkennung der Header Zeile geändert, Beschreibungszeilen können jetzt auch das Trennzeichen enthalten)
 - Mapping Datei Handhabung geändert (gleiche Platzhalter und CSV Spalten Namen sind nicht mehr nötig)

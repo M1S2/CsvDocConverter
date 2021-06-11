@@ -1,4 +1,4 @@
-﻿
+
 # CsvDocConverter
 
 [![GitHub Release Version](https://img.shields.io/github/v/release/M1S2/CsvDocConverter)](https://github.com/M1S2/CsvDocConverter/releases/latest)
