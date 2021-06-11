@@ -1,4 +1,5 @@
-﻿# CsvDocConverter
+﻿
+# CsvDocConverter
 
 [![GitHub Release Version](https://img.shields.io/github/v/release/M1S2/CsvDocConverter)](https://github.com/M1S2/CsvDocConverter/releases/latest)
 [![GitHub License](https://img.shields.io/github/license/M1S2/CsvDocConverter)](LICENSE.md)
@@ -41,10 +42,10 @@ Welche Platzhalter durch welche Spalten der CSV Datei ersetzt werden, wird durch
 
 Mapping Datei					| Beschreibung
 -----------------------------------------------	| ------------------------------------------------------------------------------
-PlatzhalterDoc, SpalteCsv			| Überschriftenzeile. Dient der Übersichtlichkeit. Wichtig: Diese Zeile muss vorhanden sein und 2 Elemente (Spalten) haben. Die einzelnen Werte sind irrelevant.
-%PlatzhalterTemplateInfos%, %Infos%		| %Info% in der 2. Spalte kann verwendet werden, um generelle Informationen, die vor der eigentlichen CSV Tabelle stehen, einzufügen. Dabei wird der Platzhalter in der 1. Spalte ersetzt (Format %<Name>%, z.B. %Veranstaltungsinfos%).
+PlatzhalterDoc, SpalteCsv			| Überschriftenzeile. Dient der Übersichtlichkeit. *Wichtig:* Diese Zeile muss vorhanden sein und 2 Elemente (Spalten) haben. Die einzelnen Werte sind irrelevant.
+%PlatzhalterTemplateInfos%, %Infos%		| %Info% in der 2. Spalte kann verwendet werden, um generelle Informationen, die vor der eigentlichen CSV Tabelle stehen, einzufügen. Dabei wird der Platzhalter in der 1. Spalte ersetzt (Format %\<Name\>%, z.B. %Veranstaltungsinfos%).
 %PlatzhalterTemplateInfosZeile1%, %Infos1%	| Ähnlich wie %Info%. %Info<Zahl>% in der 2. Spalte fügt allerdings nur eine einzelne Zeile der generellen Informationen ein (<Zahl> gibt die Zeilennummer an (1-basiert), z.B. %Info1% fügt die erste Zeile ein).
-%PlatzhalterTemplate1%, SpaltennameCSV1		| Zuordnung eines Platzhalters im Template (Format %<Name>%, z.B. %VN%) zu einer Spalte in der CSV Datei (Format <Spaltenname>, z.B. Vorname).
+%PlatzhalterTemplate1%, SpaltennameCSV1		| Zuordnung eines Platzhalters im Template (Format %\<Name\>%, z.B. %VN%) zu einer Spalte in der CSV Datei (Format <Spaltenname>, z.B. Vorname).
 %PlatzhalterTemplate2%, SpaltennameCSV2		| Es können beliebig viele Zuordnungspaare folgen...
 
 Ein Beispiel für die Mapping Datei ist [hier](/Example/Mapping.csv) zu finden.

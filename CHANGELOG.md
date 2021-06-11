@@ -2,10 +2,12 @@
 
 ## [%version%] - %date%
 
+- CSV Datei Parsing geändert (Erkennung der Header Zeile geändert, Beschreibungszeilen können jetzt auch das Trennzeichen enthalten)
+- Mapping Datei Handhabung geändert (gleiche Platzhalter und CSV Spalten Namen sind nicht mehr nötig)
 
 ## [v1.0.2] - 22.06.2020 19:42
 
-- Fixing error when selecting the csv file the first time per dialog
+- Fehler beim erstmaligen auswählen der CSV Datei per Dialog korrigiert
 
 ## [v1.0.1] - 19.06.2020 20:16
 
