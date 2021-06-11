@@ -1,6 +1,0 @@
-﻿Veranstaltung : Test
-Wann : 24/05/2021 - 18:00 - 19:00
-Name,E-Mail,Telefonnummer,Buchungsdatum,Buchungskommentar,Status
-"Person 1",test1@gmx.de,12345,"24/05/2021 12:00",test,Freigegeben
-"Person 2",test2@gmx.de,67890,"24/05/2021 08:00",test2,Freigegeben
-"Max Mustermann",max.mustermann@muster.com,0815,"24/05/2021 08:15",testMax,Freigegeben
