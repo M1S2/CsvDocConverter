@@ -2,6 +2,7 @@
 
 ## [%version%] - %date%
 
+- CSV Datei Parsing verbessert (Zeilenumbrüche in Kommentaren werden jetzt auch unterstützt)
 
 ## [v1.1.0] - 11.06.2021 21:52
 

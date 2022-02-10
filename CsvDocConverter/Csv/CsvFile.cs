@@ -90,7 +90,8 @@ namespace CsvDocConverter.Csv
             {
                 return false;
             }
-            string[] csv_lines = System.IO.File.ReadAllLines(FilePath);                             //Read all lines of the .csv file
+            //string[] csv_lines = System.IO.File.ReadAllLines(FilePath);                           //Read all lines of the .csv file
+            string[] csv_lines = readFileLines(FilePath).ToArray();                                 //Read all lines of the .csv file
 
             // ########## Find Header Line ##########
             int headerLineIndex = -1;
@@ -158,5 +159,72 @@ namespace CsvDocConverter.Csv
             }
             return true;
         }
+
+        /// <summary>
+        /// Read all text from the given file and split it into lines.
+        /// Newline characters (\r\n or \n) are only used to split if they aren't inside quotes.
+        /// e.g.
+        /// 
+        /// "Name,Kommentar,Test
+        /// \"Max\",\"Comment1 with
+        /// newline\",\"ABC\"
+        /// Eva,\"Comment2\",\"XYZ\""
+        /// 
+        /// results in
+        /// 
+        /// [0]: "Name,Kommentar,Test"
+        /// [1]: "\"Max\",\"Comment1 with
+        /// newline\",\"ABC\""
+        /// [2]: "Eva,\"Comment2\",\"XYZ\""
+        /// </summary>
+        /// <param name="filepath">File wich should be splitted. No file exist check is performed here.</param>
+        /// <returns><see cref="IEnumerable{string}"/> with all file lines.</returns>
+        /// <see cref="https://stackoverflow.com/questions/33063/looking-for-regex-to-find-quoted-newlines-in-a-big-string-for-c"/>
+        private IEnumerable<string> readFileLines(string filepath)
+        {
+            TextReader reader = new StreamReader(filepath);
+
+            bool insideQuotes = false;
+            StringBuilder line = new StringBuilder();
+
+            while (reader.Peek() != -1)
+            {
+                char ch = (char)reader.Read();
+                char? nextCh = reader.Peek() > -1 ? (char)reader.Peek() : (char?)null;
+
+                if (!insideQuotes && ch == '\r' && nextCh == '\n')  // CRLF
+                {
+                    reader.Read(); // skip LF
+                    yield return line.ToString();
+                    line.Length = 0;
+                }
+                else if (!insideQuotes && ch == '\n')               // LF for *nix-style line endings
+                {
+                    yield return line.ToString();
+                    line.Length = 0;
+                }
+                else if (ch == '\\' && nextCh == '"')               // escaped quotes \"
+                {
+                    line.Append("\\\"");
+                    reader.Read(); // skip next "
+                }
+                else if (ch == '"')                                 // normal quotes
+                {
+                    insideQuotes = !insideQuotes;
+                    line.Append(ch);
+                }
+                else                                                // all other characters
+                {
+                    line.Append(ch);
+                }
+            }
+
+            if (line.Length > 0)
+            {
+                // last one
+                yield return line.ToString();
+            }
+        }
+
     }
 }
